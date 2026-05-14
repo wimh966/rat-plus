@@ -1,0 +1,9 @@
+_name_: sequence
+num_layers: 12
+d_model: 768
+bias: false
+ln: rmsnorm
+dropout: 0.0
+init:
+  _name_: fixed
+  initializer_range: 0.02

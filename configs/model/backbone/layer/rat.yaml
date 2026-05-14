@@ -1,0 +1,11 @@
+_name_: rat
+d_model: ${model.backbone.d_model}
+d_head: 64
+num_head: ${eval:${.d_model} // ${.d_head}}
+k_channel: ${.d_head}
+bias: ${model.backbone.bias}
+ngroups: 2
+init: ${model.backbone.init}
+chunk_size: 64
+ln: ${model.backbone.ln}
+gate_bias: true

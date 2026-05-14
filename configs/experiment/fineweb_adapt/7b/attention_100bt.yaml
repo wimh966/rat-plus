@@ -1,0 +1,69 @@
+# @package _global_
+defaults:
+  - /data: fineweb_edu/llama
+  - /model/backbone: sequence
+  - /model/backbone/layer@model.backbone.seq_cell: ratplus
+  - /model/backbone/layer@model.backbone.hidden_cell: ffn
+  - /model/head: lm
+  - /model/embedding: lm
+  - /model/embedding@model.embedding.pe: rope
+  - /task: lm
+  - /optim/lr_scheduler: cosine
+  - /optim/optimizer: adamw
+  - _self_
+
+data:
+  global_batch_size: 768 # same with the pretrained bs
+  batch_size: 1
+  train:
+    _name_: lm_random
+    limit_tokens: ${eval:"1*10**9"} # ${eval:"10*10**9"}
+  val:
+    global_batch_size: 512 # use the same for the eval.
+    limit_tokens: -1
+
+optim:
+  optimizer:
+    lr: 2.0e-5 # use a small one to avoid shifting too much
+    weight_decay: 0.1
+    betas: [0.9,0.95]
+  lr_scheduler:
+    warmup_iter: 0.02 # 0.05
+    eta_min: 1.0e-6
+
+wandb:
+  job_type: fineweb_midtrain
+
+model:
+  backbone:
+    num_layers: 32
+    d_model: 4096
+    dropout: 0.0
+    bias: false
+    ln: rmsnorm
+    init:
+      _name_: fixed
+      initializer_range: 0.02
+    seq_cell:
+      d_head: 128
+      chunk_size: 1
+      chunk_size1: 1 # ${eval:"[1, 64] * 12"}
+      prefix_size: 0
+      local_size: 0
+      apply_re: false
+      mix_train: false
+task:
+  ignore_index: -100
+
+trainer:
+  global_batch_size: ${data.global_batch_size}
+  gradient_clipping: 1.0
+  max_epoch: 1
+  load_checkpoint: true
+  save_checkpoint: true
+  log_interval: 50
+  save_interval: 1.0
+  eval_when_log: false
+  dtype: bfloat16
+  save_dir: ${base_dir}/exp/ckpt/${wandb.job_type}/7b_100bt/ # ratplus16localprefixsimple_d64/
+  pretrained_path: /home/xwei/fake_path/sequence_model/exp/ckpt/fineweb_pretrain/fineweb_llama4096-lm-lmposrope10000-sequenced4096l32-ratplus16localprefixfgatesimplel1l1p0w0reFalsemixtrainFalseropepostogatefFalse-ffn-lm/0x0006_768_1/34967_wonly.pth

@@ -1,0 +1,36 @@
+defaults:
+  - _self_
+  - experiment: refinedweb/s
+
+base_dir: /home/xwei/fake_path/sequence_model
+wandb:
+  entity: xiuying-wei
+  project: sequence_model
+  job_type: train
+  mode: online
+  anonymous: allow
+  dir: ${base_dir}
+
+wandb_use: true
+
+hydra:
+  run:
+    dir: ${base_dir}/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+trainer:
+  test_speed: false
+  max_epoch: 1
+  device: cuda
+  seed: 1005
+  load_checkpoint: false
+  save_checkpoint: false
+  save_dir: ${base_dir}/exp/ckpt/${wandb.job_type}
+  save_interval: 0.1
+  log_interval: 50
+  eval_when_log: false
+  torch_compile: true
+  dtype: float32
+  global_batch_size: null
+  gradient_clipping: false
+  check_gradient_norm: false
+  pretrained_path: null

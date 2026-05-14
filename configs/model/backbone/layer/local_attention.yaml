@@ -1,0 +1,9 @@
+_name_: local_attention
+d_model: ${model.backbone.d_model}
+window_size: 1024
+d_head: 64
+num_head: ${eval:${.d_model} // ${.d_head}}
+k_channel: ${.d_head}
+bias: ${model.backbone.bias}
+ln: ${model.backbone.ln}
+init: ${model.backbone.init}

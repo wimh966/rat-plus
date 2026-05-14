@@ -1,0 +1,10 @@
+_name_: sequence_interleave
+num_layers: 12
+d_model: 768
+bias: false
+ln: rmsnorm
+dropout: 0.0
+interleave_step: 2
+init:
+  _name_: fixed
+  initializer_range: 0.02

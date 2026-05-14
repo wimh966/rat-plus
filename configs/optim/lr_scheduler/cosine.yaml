@@ -1,0 +1,4 @@
+_name_: cosine
+warmup_iter: 0.1
+T_max: 1000
+eta_min: 1.0e-7

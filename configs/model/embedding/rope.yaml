@@ -1,0 +1,4 @@
+_name_: rope
+dim: ${oc.select:model.backbone.seq_cell.k_channel,null} # k_channel
+base: 10000
+max_seq_len: ${data.seq_len}

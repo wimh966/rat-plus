@@ -1,0 +1,8 @@
+_name_: ffn
+d_model: ${model.backbone.d_model}
+ln: ${model.backbone.ln}
+init: ${model.backbone.init}
+d_ffn: ${eval:"4 * ${.d_model}"}
+act_fn: gelu
+bias: ${model.backbone.bias}
+dropout: ${model.backbone.dropout}

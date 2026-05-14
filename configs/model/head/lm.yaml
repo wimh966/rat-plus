@@ -1,0 +1,4 @@
+_name_: lm
+vocab_size: ${data.vocab_size}
+d_model: ${model.backbone.d_model}
+init: ${model.backbone.init}

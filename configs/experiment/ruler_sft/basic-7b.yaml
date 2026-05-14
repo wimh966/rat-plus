@@ -1,0 +1,71 @@
+# @package _global_
+defaults:
+  - /data: ruler/llama
+  - /model/backbone: sequence
+  - /model/backbone/layer@model.backbone.seq_cell: ratplus
+  - /model/backbone/layer@model.backbone.hidden_cell: ffn
+  - /model/head: lm
+  - /model/embedding: lm
+  - /model/embedding@model.embedding.pe: rope
+  - /task: lm
+  - /optim/lr_scheduler: cosine
+  - /optim/optimizer: adamw
+  - _self_
+
+data:
+  global_batch_size: 32
+  seq_len: 4096
+  batch_size: 1
+  train:
+    limit_tokens: -1
+  val:
+    limit_tokens: -1
+
+optim:
+  optimizer:
+    lr: 1.0e-5
+    weight_decay: 0.01
+    betas: [0.9,0.95]
+  lr_scheduler:
+    warmup_iter: 0.05 # keep the same with the pre-training
+    eta_min: 1.0e-6
+
+wandb:
+  job_type: ruler_sft
+
+model:
+  backbone:
+    num_layers: 32
+    d_model: 4096
+    dropout: 0.0
+    bias: false
+    ln: rmsnorm
+    init:
+      _name_: fixed
+      initializer_range: 0.02
+    seq_cell:
+      d_head: 128
+      chunk_size: 1
+      chunk_size1: 1
+      prefix_size: 0
+      local_size: 0
+      apply_re: true
+      mix_train: false # we can choose to do mix train or not, we can do the chunk_size1=64
+task:
+  ignore_index: -100
+
+trainer:
+  global_batch_size: ${data.global_batch_size}
+  gradient_clipping: 1.0
+  max_epoch: 4
+  load_checkpoint: false
+  save_checkpoint: true
+  log_interval: 50
+  save_interval: 1.0
+  eval_when_log: false
+  dtype: bfloat16
+  save_dir: ${base_dir}/exp/ckpt/${wandb.job_type}/7b_100bt/
+  pretrained_path: /home/xwei/fake_path/sequence_model/exp/ckpt/fineweb_midtrain/7b_100bt/fineweb_llama4096-lm-lmposrope10000-sequenced4096l32-ratplus16localprefixfgatesimplel1l${model.backbone.seq_cell.chunk_size1}p${model.backbone.seq_cell.prefix_size}w${model.backbone.seq_cell.local_size}reTruemixtrain${model.backbone.seq_cell.mix_train}ropepostogatefFalse-ffn-lm/2e-05_768_1/316_wonly.pth
+  fsdp:
+    sharding_strategy: 1 # 1-> FULL_SHARD
+# we should use this file either or not with mix train

@@ -1,0 +1,9 @@
+_name_: lm
+tie_embedding: true
+ignore_index: -100
+loss:
+  _name_: cross_entropy
+  ignore_index: ${..ignore_index}
+metric:
+  _name_: ppl
+  ignore_index: ${..ignore_index}

@@ -1,0 +1,27 @@
+_name_: niah_multikey_3
+seq_len: 4096
+num_bytes: 2
+ignore_input_index: 2
+vocab_size: 32000
+batch_size: 1
+global_batch_size: 512
+train:
+  _name_: sft_random
+  tokenized_input_path: /home/xwei/fake_path/dataset/needle/train_niah/llama-train-${..seq_len}-inputs.bin
+  tokenized_label_path: /home/xwei/fake_path/dataset/needle/train_niah/llama-train-${..seq_len}-labels.bin
+  num_bytes: ${..num_bytes}
+  batch_size: ${..batch_size}
+  global_batch_size: ${..global_batch_size}
+  seq_len: ${..seq_len}
+  vocab_size: ${..vocab_size}
+  limit_tokens: -1
+val:
+  _name_: sft_ordered
+  tokenized_input_path: /home/xwei/fake_path/dataset/needle/${.._name_}/llama-validation-${..seq_len}-inputs.bin
+  tokenized_label_path: /home/xwei/fake_path/dataset/needle/${.._name_}/llama-validation-${..seq_len}-labels.bin
+  num_bytes: ${..num_bytes}
+  batch_size: ${..batch_size}
+  global_batch_size: ${..global_batch_size}
+  seq_len: ${..seq_len}
+  vocab_size: ${..vocab_size}
+  limit_tokens: -1

@@ -1,0 +1,6 @@
+_name_: lm
+vocab_size: ${data.vocab_size}
+seq_len: ${data.seq_len}
+d_model: ${model.backbone.d_model}
+dropout: ${model.backbone.dropout}
+init: ${model.backbone.init}
