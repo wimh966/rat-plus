@@ -40,9 +40,8 @@ model:
       initializer_range: 0.02
     seq_cell:
       d_head: 128
-      chunk_size: 1
-      chunk_size1: 64
-      prefix_size: 0
+      dilation_size: 64
+      initial_size: 0
       local_size: 0
       apply_re: true
       joint_train: true
@@ -59,5 +58,3 @@ trainer:
   eval_when_log: false
   dtype: bfloat16
   save_interval: 0.05
-  # fsdp:
-  #   sharding_strategy: 1 # 1-> FULL_SHARD

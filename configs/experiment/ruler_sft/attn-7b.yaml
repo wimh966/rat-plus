@@ -45,19 +45,18 @@ model:
       initializer_range: 0.02
     seq_cell:
       d_head: 128
-      chunk_size: 1
-      chunk_size1: -1
-      prefix_size: ${data.seq_len}
+      dilation_size: -1
+      initial_size: ${data.seq_len}
       local_size: 0
       apply_re: false
-      mix_train: false # we can choose to do mix train or not
+      joint_train: false # we can choose to do mix train or not
 task:
   ignore_index: -100
 
 trainer:
   global_batch_size: ${data.global_batch_size}
   gradient_clipping: 1.0
-  max_epoch: 4 # old is 4
+  max_epoch: 4
   load_checkpoint: false
   save_checkpoint: true
   log_interval: 50

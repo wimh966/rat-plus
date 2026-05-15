@@ -39,10 +39,10 @@ model:
       initializer_range: 0.02
     seq_cell:
       d_head: 128
-      dilation_size: 64
+      dilation_size: -1
       initial_size: 0
-      local_size: 0
-      apply_re: true
+      local_size: 64
+      apply_re: false
       joint_train: true
 task:
   ignore_index: -100

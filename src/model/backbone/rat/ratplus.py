@@ -6,23 +6,16 @@ import torch
 import torch.nn as nn
 from typing import Tuple, Optional, Union
 import torch.nn.functional as F
+from ....utils.registry import layer_registry, norm_registry, init_registry
+from ...base import Base
+from ..util import apply_rotary_pos_emb
 from ...op import get_eff_attention, ascan
 from ..cache import RATPlusSingleLayerCache, RATPlusFullSingleLayerCache
 
 
-def rotate_half(x):
-    """Rotates half the hidden dims of the input."""
-    x1 = x[..., : x.shape[-1] // 2]
-    x2 = x[..., x.shape[-1] // 2 :]
-    return torch.cat((-x2, x1), dim=-1)
 
-def apply_rotary_pos_emb(q, k, cos, sin): # cos and sin has been taken out based on the position ids
-    q_embed = (q * cos) + (rotate_half(q) * sin)
-    k_embed = (k * cos) + (rotate_half(k) * sin)
-    return q_embed, k_embed
-
-
-class RATPlus(nn.Module):
+@layer_registry.register("ratplus")
+class RATPlus(Base):
     """
     RAT+ module.
 
@@ -33,12 +26,15 @@ class RATPlus(nn.Module):
         initial_size (int): Number of initial tokens invoked during inference.
         local_size (int): Local window size for sparse attention connections during inference.
         apply_re (bool): Whether to apply the recurrence mechanism.
-        joint_train (bool): If True, trains both dense and sparse configurations. This option should not be used after pretraining.
+        joint_train (bool): If True, trains both dense and sparse (only D=64) configurations to enable full attention and recurrence abilities. This option should not be used after pretraining.
     """
     def __init__(
         self,
         d_model,
         num_head=16,
+        bias=False,
+        init=None,
+        ln="rmsnorm",
         dilation_size=64,
         initial_size=0,
         local_size=0,
@@ -53,21 +49,25 @@ class RATPlus(nn.Module):
         self.d_model = d_model
         self.num_head = num_head
         assert self.d_model % self.num_head == 0
+        assert bias is False
         self.d_head = self.d_model // self.num_head
         self.softmax_scale = self.d_head ** -0.5
         # q, k, v, f, g
         # Note that we add the output gating for both RAT+ and attention-only baseline since it has been known to be effective. 
         # Efficiency and accuracy studies are conducted consistently. We leave saving parameters for future work.
         self.in_proj = nn.Linear(d_model, 5 * self.d_model if apply_re else 4 * self.d_model, bias=False, **factory_kwargs)
-        self.input_norm = nn.RMSNorm(self.d_model, eps=1.0e-6, **factory_kwargs)
+        self.input_norm = norm_registry[ln](self.d_model, eps=1.0e-6, **factory_kwargs)
         self.out_proj = nn.Linear(self.d_model, self.d_model, bias=False, **factory_kwargs)
+        self.init = init
         self.joint_train = joint_train
         self.apply_re = apply_re
         self.dilation_size = dilation_size if type(dilation_size) is int else dilation_size[self.layer_id]
         self.initial_size = initial_size if type(initial_size) is int else initial_size[self.layer_id]
         self.local_size = local_size if type(local_size) is int else local_size[self.layer_id]
         self.eff_attention = get_eff_attention(softmax_scale=self.softmax_scale, dilation_size=self.dilation_size, local_size=self.local_size, initial_size=self.initial_size)
-        # Parameter initialization called at higher level. Gaussian initialization; nothing special.
+
+    def init_weights(self, init_config):
+        super().init_weights(init_config)
 
     def apply_rope(self, q, k, **kwargs):
         rotary_pos_emb = kwargs.get(f"rope", None)
@@ -148,13 +148,13 @@ class RATPlus(nn.Module):
 
     @staticmethod
     def get_ckpt_name(model_config):
-        chunk_size1 = model_config.chunk_size1
+        dilation_size = model_config.dilation_size
         local_size = model_config.local_size
-        if type(chunk_size1) is list and len(chunk_size1) > 2:
-            chunk_size1 = str(chunk_size1[0]) + str(chunk_size1[1])
+        if type(dilation_size) is list and len(dilation_size) > 2:
+            dilation_size = str(dilation_size[0]) + str(dilation_size[1])
         if type(local_size) is list and len(local_size) > 2:
             local_size = str(local_size[0]) + str(local_size[1])
-        return model_config._name_ + f"l{model_config.chunk_size}l{chunk_size1}p{model_config.initial_size}w{local_size}" + f"re{model_config.apply_re}" + f"jointtrain{model_config.joint_train}"
+        return model_config._name_ + f"d{dilation_size}p{model_config.initial_size}w{local_size}" + f"re{model_config.apply_re}" + f"jointtrain{model_config.joint_train}"
 
     def extra_repr(self):
         return f"d_model={self.d_model}, nhead={self.num_head}, dilation_size={self.dilation_size}, initial_size={self.initial_size}, local_size={self.local_size}, re={self.apply_re}, mixtrain={self.joint_train}"

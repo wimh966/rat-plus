@@ -45,12 +45,11 @@ model:
       initializer_range: 0.02
     seq_cell:
       d_head: 128
-      chunk_size: 1
-      chunk_size1: 1
-      prefix_size: 0
+      dilation_size: 1
+      initial_size: 0
       local_size: 0
       apply_re: true
-      mix_train: false # we can choose to do mix train or not, we can do the chunk_size1=64
+      joint_train: false
 task:
   ignore_index: -100
 
@@ -65,7 +64,7 @@ trainer:
   eval_when_log: false
   dtype: bfloat16
   save_dir: ${base_dir}/exp/ckpt/${wandb.job_type}/7b_100bt/
-  pretrained_path: /home/xwei/fake_path/sequence_model/exp/ckpt/fineweb_midtrain/7b_100bt/fineweb_llama4096-lm-lmposrope10000-sequenced4096l32-ratplus16localprefixfgatesimplel1l${model.backbone.seq_cell.chunk_size1}p${model.backbone.seq_cell.prefix_size}w${model.backbone.seq_cell.local_size}reTruemixtrain${model.backbone.seq_cell.mix_train}ropepostogatefFalse-ffn-lm/2e-05_768_1/316_wonly.pth
+  pretrained_path: /home/xwei/fake_path/sequence_model/exp/ckpt/fineweb_midtrain/7b_100bt/fineweb_llama4096-lm-lmposrope10000-sequenced4096l32-ratplus16localprefixfgatesimplel1l${model.backbone.seq_cell.dilation_size}p${model.backbone.seq_cell.initial_size}w${model.backbone.seq_cell.local_size}reTruemixtrain${model.backbone.seq_cell.joint_train}ropepostogatefFalse-ffn-lm/2e-05_768_1/316_wonly.pth
   fsdp:
     sharding_strategy: 1 # 1-> FULL_SHARD
 # we should use this file either or not with mix train

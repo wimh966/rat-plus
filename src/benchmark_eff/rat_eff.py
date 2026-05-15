@@ -20,7 +20,7 @@ import src.data
 for registry in registries:
     registry._is_register = False
 
-from SSM.sq_pretrain.src.model.backbone.rat.ratplus import RATPlus16LocalPrefixFgateSimple as RATPlus
+from src.model.backbone.rat.ratplus import RATPlus
 from src.model.embedding.pe import RoPE
 from src.model.backbone.cache import RATPlusSingleLayerCache
 from config import *

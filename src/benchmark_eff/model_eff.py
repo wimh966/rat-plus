@@ -39,7 +39,7 @@ from src.utils.registry import (
 import src.utils.gen as gen_util
 
 """
-torchrun --nnodes=1 --nproc-per-node=1 model_eff.py experiment=fineweb_edu/ratplus/ratplus-1b model.backbone.seq_cell.chunk_size1=16 model.backbone.seq_cell.prefix_size=4 model.backbone.seq_cell.local_size=0
+torchrun --nnodes=1 --nproc-per-node=1 model_eff.py experiment=fineweb_edu/ratplus/ratplus-1b model.backbone.seq_cell.dilation_size=16 model.backbone.seq_cell.initial_size=4 model.backbone.seq_cell.local_size=0
 """
 
 def set_seed(seed):

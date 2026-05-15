@@ -1,5 +1,0 @@
-_name_: intrarope
-dim: ${oc.select:model.backbone.seq_cell.k_channel,null}
-max_chunk_size: ${model.backbone.seq_cell.chunk_size}
-chunk_size: ${model.backbone.seq_cell.chunk_size}
-base: 10000

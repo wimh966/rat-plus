@@ -1,8 +1,0 @@
-_name_: intraab_interrope
-dim: ${model.backbone.d_model}
-rope_dim: ${oc.select:model.backbone.seq_cell.k_channel,null}
-max_chunk_size: ${model.backbone.seq_cell.chunk_size}
-chunk_size: ${model.backbone.seq_cell.chunk_size}
-max_num_chunk: ${eval:${data.seq_len} // ${.chunk_size}}
-prefix_size: ${oc.select:model.backbone.seq_cell.prefix_size,0}
-base: 10000

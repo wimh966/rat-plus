@@ -13,9 +13,9 @@ def get_cache(config):
         cache = dict()
         for i in range(num_layers):
             cache[i] = RATPlusFullSingleLayerCache(i, bs, seq_len,
-                                                   prefix_size=seq_cell.prefix_size[i] if type(seq_cell.prefix_size) is list else seq_cell.prefix_size,
+                                                   initial_size=seq_cell.initial_size[i] if type(seq_cell.initial_size) is list else seq_cell.initial_size,
                                                    local_size=seq_cell.local_size[i] if type(seq_cell.local_size) is list else seq_cell.local_size,
-                                                   chunk_size1=seq_cell.chunk_size1[i] if type(seq_cell.chunk_size1) is list else seq_cell.chunk_size1,
+                                                   dilation_size=seq_cell.dilation_size[i] if type(seq_cell.dilation_size) is list else seq_cell.dilation_size,
                                                    num_head=seq_cell.num_kv_head if hasattr(seq_cell, "num_kv_head") else seq_cell.num_head,
                                                    d_head=seq_cell.d_head,
                                                    d_model=seq_cell.d_model, 
@@ -28,9 +28,9 @@ def get_cache(config):
         cache = dict()
         for i in range(num_layers):
             cache[i] = RATPlusSingleLayerCache(i, bs, seq_len,
-                                               prefix_size=seq_cell.prefix_size[i] if type(seq_cell.prefix_size) is list else seq_cell.prefix_size,
+                                               initial_size=seq_cell.initial_size[i] if type(seq_cell.initial_size) is list else seq_cell.initial_size,
                                                local_size=seq_cell.local_size[i] if type(seq_cell.local_size) is list else seq_cell.local_size,
-                                               chunk_size1=seq_cell.chunk_size1[i] if type(seq_cell.chunk_size1) is list else seq_cell.chunk_size1,
+                                               dilation_size=seq_cell.dilation_size[i] if type(seq_cell.dilation_size) is list else seq_cell.dilation_size,
                                                num_head=seq_cell.num_kv_head if hasattr(seq_cell, "num_kv_head") else seq_cell.num_head,
                                                d_head=seq_cell.d_head,
                                                d_model=seq_cell.d_model,

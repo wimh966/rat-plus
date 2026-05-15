@@ -46,12 +46,11 @@ model:
       initializer_range: 0.02
     seq_cell:
       d_head: 128
-      chunk_size: 1
-      chunk_size1: 1 # ${eval:"[1, 64] * 12"}
-      prefix_size: 0
+      dilation_size: 1 # ${eval:"[1, 64] * 12"}
+      initial_size: 0
       local_size: 0
       apply_re: true
-      mix_train: false
+      joint_train: false
 task:
   ignore_index: -100
 
