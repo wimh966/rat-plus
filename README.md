@@ -43,7 +43,7 @@ RAT+ bridges the pretraining architecture and flexible inference. The table belo
 | Inference-time sparsity |  |  |  |  |  |
 | StreamingLLM | ✓ | ✓ | ✓ | ✗ | Table 4 and Table 5 |
 | Top-k block | ✓ | ✓ | ✗ | ✓ | Table 7, 16, 17, 18 |
-| SnapKV | ✗ | ✓ | ✓ | ✓ | Table 7, 16, 17, 18 |
+| SnapKV | ✗ | ✓ | ✓ | ✓ | Table 7 |
 
 ## Checkpoints
 
