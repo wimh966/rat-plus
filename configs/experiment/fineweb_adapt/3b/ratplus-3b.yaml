@@ -32,7 +32,7 @@ optim:
     eta_min: 1.0e-6
 
 wandb:
-  job_type: fineweb_midtrain
+  job_type: fineweb_adapt
 
 model:
   backbone:

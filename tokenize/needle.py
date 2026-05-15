@@ -63,7 +63,7 @@ def save_to_npmemmap(split, tokenizer, dset, path, max_length):
     filename = os.path.join(cache_dir, f"{path}.bin")
     arr_len = dset.num_rows
     if tokenizer == "olmo":
-        dtype = np.int32  # (can do since enc.max_token_value == 32000 is < 2**16)
+        dtype = np.int32
     else:
         dtype = np.int16 # (can do since enc.max_token_value == 32000 is < 2**16)
     arr = np.memmap(filename, dtype=dtype, mode="w+", shape=(arr_len, max_length))
@@ -84,7 +84,7 @@ def main(args):
     global cache_dir
     cache_dir = os.path.join(cache_dir, args.task)
     dset = load_dataset("json", data_files=f"/home/xwei/transformers/RULER/scripts/data/{args.task}/{args.split}.jsonl", split="train") 
-    # shutil.copy(f"/home/xwei/transformers/RULER/scripts/data/{args.task}/{args.split}.jsonl", os.path.join(cache_dir, "test.jsonl"))
+    shutil.copy(f"/home/xwei/transformers/RULER/scripts/data/{args.task}/{args.split}.jsonl", os.path.join(cache_dir, "test.jsonl"))
     print(dset)
     new_dset = tokenize_answer_only(dset, args.tokenizer, args.task, args.num_proc, args.max_length, args.split) # get the train split here
     save_to_npmemmap("input_ids", args.tokenizer, new_dset, f"{args.tokenizer}-{args.split}-{args.max_length}-inputs", args.max_length)

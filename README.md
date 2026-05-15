@@ -8,8 +8,8 @@ By Xiuying Wei and Caglar Gulcehre.
 
 Official implementation of **RAT+**, a dense-pretraining architecture that augments attention with full-sequence recurrence and active recurrence learning to enable more flexible inference.
 
-A single RAT+ model is pretrained densely once and can then be flexibly switched at inference time to dilated attention (optionally with local windows) or hybrid layer/head compositions, requiring only a short 1B-token resolution adaptation rather than retraining separate sparse models. We validate our method at 1B, 3B, and 7B model scale.
-s
+A single RAT+ model is pretrained densely once and can then be flexibly switched at inference time to dilated attention (optionally with local windows) or hybrid layer/head compositions, requiring only a short 1B-token resolution adaptation rather than retraining separate sparse models. We validate our method at 1B, 3B, and 7B model scale. RAT+ also provides better performance on top-k block pattern compared to standard attention.
+
 <p align="center">
   <img src="assets/method.png" width="750" alt="Overview of the RAT+ architecture">
 </p>
@@ -125,7 +125,8 @@ We provide the environment in the Dockerfile.
 Note that this process is brought by the attention mechanism itself, as analyzed in Sec. 3.1. However, 1B tokens are sufficient for all cases, as shown in Figure 8. To enable adaptation, we turn off joint training and specify the desired dilation size, local size, and initial size. An example is shown below. For other configurations, please check the adaptation config directory.
 
 ```bash
-torchrun --nnodes=4 --nproc_per_node=4 lm.py experiment=fineweb_adapt/ratplus-1b model.backbone.seq_cell.apply_re=true model.backbone.seq_cell.joint_train=false model.backbone.seq_cell.dilation_size=16 model.backbone.seq_cell.local_size=256 model.backbone.seq_cell.initial_size=4 trainer.pretrained_path="[Your pretrained ckpt]"
+# Adapt D=16, W=256
+torchrun --nnodes=4 --nproc_per_node=4 lm.py experiment=fineweb_adapt/1b/ratplus-1b model.backbone.seq_cell.apply_re=true model.backbone.seq_cell.joint_train=false model.backbone.seq_cell.dilation_size=16 model.backbone.seq_cell.local_size=256 model.backbone.seq_cell.initial_size=4 trainer.pretrained_path="[Your pretrained ckpt]"
 ```
 
 ### Downstream Results
@@ -138,7 +139,8 @@ After we obtain the pretrained models, we can conduct different downstream evalu
   - Run the command:
 
     ```bash
-    command="experiment=fineweb_adapt/1b/ratplus-1b;wandb_use=false;trainer.pretrained_path=[Your adapted model path];model.backbone.seq_cell.apply_re=true;model.backbone.seq_cell.dilation_size=16;model.backbone.seq_cell.local_size=0;model.backbone.seq_cell.initial_size=4"
+     # Eval 1B RAT+ with D=16, W=256
+    command="experiment=fineweb_adapt/1b/ratplus-1b;wandb_use=false;trainer.pretrained_path=[Your adapted model path];model.backbone.seq_cell.apply_re=true;model.backbone.seq_cell.dilation_size=16;model.backbone.seq_cell.local_size=256;model.backbone.seq_cell.initial_size=4"
     export task=piqa,arc_easy,arc_challenge,winogrande,lambada_openai,hellaswag
     lm_eval --model sequence_llm --model_args pretrained=attention,dtype=float32 --tasks ${task} --device cuda:0 --batch_size 16 --trust_remote_code --hydra_overrides ${command}
     ```
@@ -149,7 +151,8 @@ After we obtain the pretrained models, we can conduct different downstream evalu
   - Generate:
 
     ```bash
-    python pred.py --hydra_overrides="experiment=gen/longbench/basic-1b;wandb_use=false;model.backbone.seq_cell.dilation_size=16;trainer.pretrained_path=[Your adapted model path with the corresponding sparse configuration]" --data_type 2
+      # Eval 1B RAT+ with D=16, W=256
+    python pred.py --hydra_overrides="experiment=gen/longbench/basic-1b;wandb_use=false;model.backbone.seq_cell.dilation_size=16;model.backbone.seq_cell.local_size=256;model.backbone.seq_cell.initial_size=4;trainer.pretrained_path=[Your adapted model path with the corresponding sparse configuration]" --data_type 2
     ```
 
   - Evaluate the results:
@@ -164,6 +167,7 @@ After we obtain the pretrained models, we can conduct different downstream evalu
   - SFT:
 
     ```bash
+     # Eval 7B RAT+ with D=16, W=256
     torchrun --nnodes=4 --nproc_per_node=4 lm.py experiment=ruler_sft/basic-7b model.backbone.seq_cell.apply_re=true model.backbone.seq_cell.joint_train=false model.backbone.seq_cell.dilation_size=16 model.backbone.seq_cell.local_size=256 model.backbone.seq_cell.initial_size=4 trainer.max_epoch=4 trainer.pretrained_path="[Your adapted model path]"
     ```
 
@@ -173,7 +177,7 @@ After we obtain the pretrained models, we can conduct different downstream evalu
     export tasks="niah_single_1 niah_single_2 niah_single_3 niah_multikey_1 niah_multikey_2 niah_multikey_3 niah_multivalue niah_multiquery"
     for t in ${tasks}; 
     do 
-      torchrun --nnodes=1 --nproc_per_node=4 generation.py experiment=gen/ruler/basic-7b wandb_use=false model.backbone.seq_cell.apply_re=true model.backbone.seq_cell.joint_train=false  model.backbone.seq_cell.dilation_size=16 model.backbone.seq_cell.local_size=256 model.backbone.seq_cell.initial_size=4 data._name_=${t}
+      torchrun --nnodes=1 --nproc_per_node=4 generation.py experiment=gen/ruler/basic-7b wandb_use=false model.backbone.seq_cell.apply_re=true model.backbone.seq_cell.joint_train=false  model.backbone.seq_cell.dilation_size=16 model.backbone.seq_cell.local_size=256 model.backbone.seq_cell.initial_size=4 trainer.pretrained_path="[Your sft model path]" data._name_=${t}
     done
     ```
 

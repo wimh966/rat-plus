@@ -87,6 +87,28 @@ class RATPlusSingleLayerCache:
                 if self.dilation_size != -1:
                     self.update_kv_prefill_dilation(ed - self.local_size, kcache, vcache, gated_k, gated_x)
 
+    def update_kv_fake_prefill(self, seq_pos):
+        # to get the correct self.seq_start and self.seq_end positions quickly for eff benchmark
+        ed = seq_pos + 1
+        if self.local_size == 0:
+            if seq_pos < self.bound:
+                self.seq_start = self.seq_end = ed
+            else:
+                if self.dilation_size != -1:
+                    num_dilated = max(0, (ed - self.d_st + self.dilation_size - 1) // self.dilation_size)
+                    self.seq_start = self.seq_end = self.bound + num_dilated
+                else:
+                    self.seq_start = self.seq_end = self.bound
+        else:
+            if seq_pos < self.bound - 1:
+                self.seq_end = self.seq_start = ed
+            else:
+                self.seq_start = self.initial_size
+                self.seq_end = self.bound
+                if self.dilation_size != -1:
+                    num_dilated = max(0, (ed - self.local_size - self.d_st + self.dilation_size - 1) // self.dilation_size)
+                    self.seq_end = self.bound + num_dilated
+
     def update_kv_step(self, seq_pos, bs, gated_k, gated_x):
         kcache, vcache = self.kcache[self.bs_start: self.bs_start + bs], self.vcache[self.bs_start: self.bs_start + bs]
         if self.local_size == 0:

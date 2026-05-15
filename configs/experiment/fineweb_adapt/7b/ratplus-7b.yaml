@@ -24,7 +24,7 @@ data:
 
 optim:
   optimizer:
-    lr: 2.0e-5 # 0.1x of the pretrained lr
+    lr: 2.0e-5 # we later realize using a smaller one is better than 0.1x to avoid shifting the model too much, though it seems that downstream results are almost the same
     weight_decay: 0.1
     betas: [0.9,0.95]
   lr_scheduler:
@@ -32,7 +32,7 @@ optim:
     eta_min: 1.0e-6
 
 wandb:
-  job_type: fineweb_midtrain
+  job_type: fineweb_adapt
 
 model:
   backbone:

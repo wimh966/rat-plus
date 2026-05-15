@@ -31,7 +31,6 @@ name2torchdtype = {
     "float16": torch.float16,
     "bfloat16": torch.bfloat16,
 }
-# for mid_training
 
 class WandbLog:
 
