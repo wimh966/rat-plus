@@ -1,8 +1,8 @@
 # RAT+: Train Dense, Infer Sparse - Recurrence Augmented Attention for Dilated Inference
 
-<a href="https://arxiv.org/abs/2602.18196">
-  <img src="https://img.shields.io/badge/arXiv-2602.18196-b31b1b?style=for-the-badge&logo=arxiv&logoColor=white" alt="arXiv:2602.18196" />
-</a>
+[![arXiv](https://img.shields.io/badge/arXiv-/2602.18196-red.svg)](https://arxiv.org/abs//2602.18196)
+[![HuggingFace](https://img.shields.io/badge/🤗-Huggingface-blue)](https://huggingface.co/barpitf/ratplus)
+
 
 By Xiuying Wei and Caglar Gulcehre. 
 
@@ -10,6 +10,7 @@ Official implementation of **RAT+**, a dense-pretraining architecture that augme
 
 A single RAT+ model is pretrained densely once and can then be flexibly switched at inference time to dilated attention (optionally with local windows) or hybrid layer/head compositions, requiring only a short 1B-token resolution adaptation rather than retraining separate sparse models. We validate our method at 1B, 3B, and 7B model scale. RAT+ also provides better performance on top-k block pattern compared to standard attention.
 
+Note that this flexibility is not achieved by exposing the model to various configurations during training, which may lead to insufficient optimization of each configuration. Instead, it comes from modifying the architecture to achieve accurate and stable performance across different settings. Specifically, the model contains both a fast recurrence mechanism and an accurate attention mechanism, both of which are well optimized during training. At inference time, we can then decide, in a hierarchical manner, how much to rely on fast recurrence and how much to rely on attention to have different trade-offs between efficiency and accuracy.
 <p align="center">
   <img src="assets/method.png" width="750" alt="Overview of the RAT+ architecture">
 </p>
@@ -47,7 +48,9 @@ RAT+ bridges the pretraining architecture and flexible inference. The table belo
 
 ## Checkpoints
 
-TODO: We will release the checkpoints soon on Hugging Face. Stay tuned!
+We release our checkpoints and pretraining data at https://huggingface.co/barpitf/ratplus, which contains 1B (100BT), 7B (100BT), and 3B (200BT) models. Note that the models under the pretrain/ directory should not be used directly for evaluation. These models need to undergo the resolution adaptation phase with the corresponding inference dilation size, local size, and initial size. Since there can be various configurations, we provide only one example, D=16 and W=256, under the adapt/ directory. For other configurations, we leave the adaptation to the readers. This process is fast and stable: 1B tokens are sufficient for all pretrained models; we used a simple optimization scheme and found it to work well, and we observed that other optimization hyperparameters also work well.
+
+**Finally, this should reproduce the results shown in Figure 6.**
 
 ## Code
 
@@ -131,7 +134,7 @@ torchrun --nnodes=4 --nproc_per_node=4 lm.py experiment=fineweb_adapt/1b/ratplus
 
 ### Downstream Results
 
-After we obtain the pretrained models, we can conduct different downstream evaluations with them.
+After we obtain the adapted models, we can conduct different downstream evaluations with them.
 
 * CommonSense reasoning: We evaluate it using the [lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness) repo. We provide the necessary files in `eval/lm_harness`.
 
@@ -140,7 +143,7 @@ After we obtain the pretrained models, we can conduct different downstream evalu
 
     ```bash
      # Eval 1B RAT+ with D=16, W=256
-    command="experiment=fineweb_adapt/1b/ratplus-1b;wandb_use=false;trainer.pretrained_path=[Your adapted model path];model.backbone.seq_cell.apply_re=true;model.backbone.seq_cell.dilation_size=16;model.backbone.seq_cell.local_size=256;model.backbone.seq_cell.initial_size=4"
+    command="experiment=fineweb_adapt/1b/ratplus-1b,wandb_use=false,trainer.pretrained_path=[Your adapted model path],model.backbone.seq_cell.apply_re=true,model.backbone.seq_cell.joint_train=false,model.backbone.seq_cell.dilation_size=16,model.backbone.seq_cell.local_size=256,model.backbone.seq_cell.initial_size=4"
     export task=piqa,arc_easy,arc_challenge,winogrande,lambada_openai,hellaswag
     lm_eval --model sequence_llm --model_args pretrained=attention,dtype=float32 --tasks ${task} --device cuda:0 --batch_size 16 --trust_remote_code --hydra_overrides ${command}
     ```
@@ -167,7 +170,7 @@ After we obtain the pretrained models, we can conduct different downstream evalu
   - SFT:
 
     ```bash
-     # Eval 7B RAT+ with D=16, W=256
+     # SFT 7B RAT+ with D=16, W=256
     torchrun --nnodes=4 --nproc_per_node=4 lm.py experiment=ruler_sft/basic-7b model.backbone.seq_cell.apply_re=true model.backbone.seq_cell.joint_train=false model.backbone.seq_cell.dilation_size=16 model.backbone.seq_cell.local_size=256 model.backbone.seq_cell.initial_size=4 trainer.max_epoch=4 trainer.pretrained_path="[Your adapted model path]"
     ```
 
